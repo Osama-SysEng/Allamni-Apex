@@ -450,9 +450,11 @@ def update_odoo_config(institution_id: str, body: OdooConfig, authorization: str
 
 @app.get('/odoo/sync/history')
 def get_sync_history(institution_id: str, authorization: str = Header(''), 
-                    entity_type: str = None, limit: int = 50):
+                    entity_type: str = None, limit: int = 50, offset: int = 0):
     """Get sync history for an institution"""
     claims = admin(authorization)
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
     
     if not hasattr(store, 'odoo_sync_events'):
         return {'institution_id': institution_id, 'history': [], 'total': 0}
@@ -466,15 +468,17 @@ def get_sync_history(institution_id: str, authorization: str = Header(''),
     
     # Sort by created_at descending
     history.sort(key=lambda x: x['created_at'], reverse=True)
-    
+
     # Limit results
-    paginated = history[:limit]
-    
+    total = len(history)
+    paginated = history[offset:offset + limit]
+
     return {
         'institution_id': institution_id,
         'history': paginated,
-        'total': len(history),
-        'limit': limit
+        'total': total,
+        'limit': limit,
+        'offset': offset
     }
 
 

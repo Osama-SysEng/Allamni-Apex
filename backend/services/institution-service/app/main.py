@@ -224,12 +224,14 @@ def generate_teacher_codes(body: GenerateTeacherCodeRequest, authorization: str 
 
 
 @app.get("/codes/student/list")
-def list_student_codes(institution_id: str, authorization: str = Header("")):
+def list_student_codes(institution_id: str, authorization: str = Header(""), limit: int = 50, offset: int = 0):
     """List all student codes for an institution"""
     claims = current(authorization)
     claims = require_institution_admin(claims)
     verify_institution_access(claims, institution_id)
-    
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+
     codes = []
     for code_id, code_data in store.student_codes.items():
         if code_data['institution_id'] == institution_id:
@@ -247,20 +249,24 @@ def list_student_codes(institution_id: str, authorization: str = Header("")):
     
     return {
         'institution_id': institution_id,
-        'codes': codes,
+        'codes': codes[offset:offset + limit],
         'total': len(codes),
+        'limit': limit,
+        'offset': offset,
         'active': len([c for c in codes if c['is_active'] and not c['student_id']]),
         'used': len([c for c in codes if c['student_id']])
     }
 
 
 @app.get("/codes/teacher/list")
-def list_teacher_codes(institution_id: str, authorization: str = Header("")):
+def list_teacher_codes(institution_id: str, authorization: str = Header(""), limit: int = 50, offset: int = 0):
     """List all teacher codes for an institution"""
     claims = current(authorization)
     claims = require_institution_admin(claims)
     verify_institution_access(claims, institution_id)
-    
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+
     codes = []
     for code_id, code_data in store.teacher_codes.items():
         if code_data['institution_id'] == institution_id:
@@ -278,8 +284,10 @@ def list_teacher_codes(institution_id: str, authorization: str = Header("")):
     
     return {
         'institution_id': institution_id,
-        'codes': codes,
+        'codes': codes[offset:offset + limit],
         'total': len(codes),
+        'limit': limit,
+        'offset': offset,
         'active': len([c for c in codes if c['is_active'] and not c['teacher_id']]),
         'used': len([c for c in codes if c['teacher_id']])
     }
@@ -501,6 +509,8 @@ def list_students(institution_id: str, authorization: str = Header(""), skip: in
     claims = current(authorization)
     claims = require_institution_admin(claims)
     verify_institution_access(claims, institution_id)
+    skip = max(0, skip)
+    limit = max(1, min(limit, 500))
     
     students = [
         u for u in store.users.values() 
@@ -599,6 +609,8 @@ def list_teachers(institution_id: str, authorization: str = Header(""), skip: in
     claims = current(authorization)
     claims = require_institution_admin(claims)
     verify_institution_access(claims, institution_id)
+    skip = max(0, skip)
+    limit = max(1, min(limit, 500))
     
     teachers = [
         u for u in store.users.values() 
@@ -946,6 +958,8 @@ def list_invoices(institution_id: str, authorization: str = Header(""),
     claims = current(authorization)
     claims = require_institution_admin(claims)
     verify_institution_access(claims, institution_id)
+    skip = max(0, skip)
+    limit = max(1, min(limit, 500))
     
     billing_service = get_billing_service(store)
     invoices = billing_service.get_invoices_by_institution(institution_id)

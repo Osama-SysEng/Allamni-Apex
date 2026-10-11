@@ -433,16 +433,17 @@ async def create_notification(body: NotificationRequest, authorization: str = He
     return {"notification_id": notification_id, "status": "notification_created"}
 
 @app.get("/notifications/{user_id}")
-async def get_notifications(user_id: str, unread_only: bool = False, authorization: str = Header("")):
+async def get_notifications(user_id: str, unread_only: bool = False, authorization: str = Header(""), limit: int = 50, offset: int = 0):
     """Get notifications for a user"""
     c = await auth(authorization)
     if c["sub"] != user_id and c["role"] not in {"admin", "institution_manager", "teacher"}:
         raise HTTPException(403, "forbidden")
-    
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
     real_time_service = get_real_time_service(store)
-    notifications = real_time_service.get_notifications(user_id, unread_only)
-    
-    return {"notifications": notifications}
+    notifications = real_time_service.get_notifications(user_id, unread_only)[offset:offset + limit]
+
+    return {"notifications": notifications, "limit": limit, "offset": offset}
 
 @app.put("/notifications/{notification_id}/read")
 async def mark_notification_read(notification_id: str, authorization: str = Header("")):

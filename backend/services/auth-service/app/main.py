@@ -522,13 +522,14 @@ def verify_biometric(biometric_data: str, authorization: str = Header('')):
         raise HTTPException(400, 'Biometric verification failed')
 
 @app.get('/auth/sessions')
-def get_active_sessions(authorization: str = Header('')):
+def get_active_sessions(authorization: str = Header(''), limit: int = 50, offset: int = 0):
     """Get all active sessions for user"""
     claims = current(authorization)
     enhanced_auth = get_enhanced_auth_service(store)
-    
-    sessions = enhanced_auth.get_active_sessions(claims['sub'])
-    return {'sessions': [{'id': s.id, 'created_at': s.created_at.isoformat(), 'last_activity': s.last_activity.isoformat()} for s in sessions]}
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+    sessions = enhanced_auth.get_active_sessions(claims['sub'])[offset:offset + limit]
+    return {'sessions': [{'id': s.id, 'created_at': s.created_at.isoformat(), 'last_activity': s.last_activity.isoformat()} for s in sessions], 'limit': limit, 'offset': offset}
 
 @app.post('/auth/sessions/{session_id}/revoke')
 def revoke_session_endpoint(session_id: str, authorization: str = Header('')):
@@ -542,13 +543,14 @@ def revoke_session_endpoint(session_id: str, authorization: str = Header('')):
         raise HTTPException(404, 'Session not found')
 
 @app.get('/auth/security-events')
-def get_security_events(authorization: str = Header('')):
+def get_security_events(authorization: str = Header(''), limit: int = 50, offset: int = 0):
     """Get security events for user"""
     claims = current(authorization)
     enhanced_auth = get_enhanced_auth_service(store)
-    
-    events = enhanced_auth.get_security_events(claims['sub'])
-    return {'events': [{'id': e.id, 'event_type': e.event_type, 'timestamp': e.timestamp.isoformat()} for e in events]}
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+    events = enhanced_auth.get_security_events(claims['sub'])[offset:offset + limit]
+    return {'events': [{'id': e.id, 'event_type': e.event_type, 'timestamp': e.timestamp.isoformat()} for e in events], 'limit': limit, 'offset': offset}
 
 # Phase 5 Security Endpoints
 

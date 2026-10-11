@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
-import httpx, os
+from fastapi.responses import Response, JSONResponse
+import httpx, os, time
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
@@ -11,6 +11,30 @@ app.add_middleware(
     allow_origins=os.getenv("CORS_ALLOWED_ORIGINS","http://localhost:8080").split(","),
     allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
+
+RATE_LIMIT = int(os.getenv("GATEWAY_RATE_LIMIT", "300"))
+RATE_WINDOW = 60.0
+_BUCKETS: dict[str, list] = {}
+
+
+@app.middleware("http")
+async def gateway_rate_limit(request: Request, call_next):
+    if request.url.path != "/health":
+        now = time.monotonic()
+        client = request.client.host if request.client else "local"
+        bucket = _BUCKETS.get(client)
+        if bucket is None or now >= bucket[1]:
+            bucket = [[now], now + RATE_WINDOW]
+            _BUCKETS[client] = bucket
+        else:
+            bucket[0].append(now)
+        cutoff = now - RATE_WINDOW
+        bucket[0] = [t for t in bucket[0] if t >= cutoff][- (RATE_LIMIT + 20):]
+        if len(_BUCKETS) > 2000:
+            _BUCKETS.pop(next(iter(_BUCKETS)))
+        if len(bucket[0]) > RATE_LIMIT:
+            return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+    return await call_next(request)
 
 TARGETS = {
     "auth": os.getenv("AUTH_URL","http://localhost:8001"),
