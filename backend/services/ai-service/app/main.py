@@ -46,8 +46,8 @@ async def startup_validation():
             "Get it from: https://aistudio.google.com/app/apikey"
         )
     
-    print(f"✅ AI Service started with provider: {provider_type}")
-    print(f"✅ Model: {os.getenv('GEMINI_MODEL', 'gemini-1.5-pro')}")
+    print(f"AI Service started with provider: {provider_type}")
+    print(f"Model: {os.getenv('GEMINI_MODEL', 'gemini-1.5-pro')}")
 
 class AnalyzeRequest(BaseModel): student_id:str
 class GenerateRequest(BaseModel): student_id:str; prompt:str="Create adaptive learning material"; context:dict={}
