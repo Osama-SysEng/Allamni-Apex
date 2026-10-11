@@ -84,7 +84,6 @@ htmlcov/
 .pytest_cache/
 
 # Docker
-.dockerignore
 # added by light repair
 node_modules/
 .next/
