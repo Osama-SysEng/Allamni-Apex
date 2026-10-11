@@ -30,10 +30,7 @@ from shared.memory import LearningMemory, MemoryType, MemoryImportance
 
 def test_complete_system_workflow():
     """Test complete workflow across all three phases"""
-    print("\n--- Testing Complete System Workflow ---")
-    
     # Phase 1: Institution and Code Generation
-    print("Step 1: Creating institution and generating codes...")
     institution_id = str(uuid4())
     institution_data = {
         'id': institution_id,
@@ -42,18 +39,13 @@ def test_complete_system_workflow():
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     store.institutions[institution_id] = institution_data
-    
+
     student_code_data = generate_student_code(institution_id, "class_1", "grade_10", "2024-2025", "admin_1")
     teacher_code_data = generate_teacher_code(institution_id, "math_dept", ["math", "science"], ["grade_10", "grade_11"], "admin_1")
-    
-    if student_code_data['code'] and teacher_code_data['code']:
-        print("[PASS] Codes generated successfully")
-    else:
-        print("[ERROR] Code generation failed")
-        return False
-    
+
+    assert student_code_data['code'] and teacher_code_data['code'], "فشل توليد الأكواد"
+
     # Phase 1: User Registration with Codes
-    print("Step 2: Registering users with codes...")
     student_user = {
         'id': str(uuid4()),
         'email': 'student@example.com',
@@ -68,37 +60,27 @@ def test_complete_system_workflow():
         'institution_id': institution_id,
         'registered_with_code': teacher_code_data['code']
     }
-    
+
     store.users[student_user['id']] = student_user
     store.users[teacher_user['id']] = teacher_user
-    
+
     # Validate codes
     valid_student_code = validate_student_code(student_code_data['code'])
     valid_teacher_code = validate_teacher_code(teacher_code_data['code'])
-    
-    if valid_student_code and valid_teacher_code:
-        print("[PASS] User registration with codes successful")
-    else:
-        print("[ERROR] Code validation failed")
-        return False
-    
+
+    assert valid_student_code and valid_teacher_code, "فشل التحقق من الأكواد"
+
     # Phase 1: Authentication and Permissions
-    print("Step 3: Testing authentication and permissions...")
     token = create_token(student_user['id'], student_user['role'], institution_id)
-    
+
     student_can_edit_own = has_permission(student_user['role'], "profile", "edit", "own")
     teacher_can_view_students = has_permission(teacher_user['role'], "students", "view", "institution")
-    
-    if student_can_edit_own and teacher_can_view_students:
-        print("[PASS] Authentication and permissions working")
-    else:
-        print("[ERROR] Permission check failed")
-        return False
-    
+
+    assert student_can_edit_own and teacher_can_view_students, "فشل فحص الصلاحيات"
+
     # Phase 2: Subscription and Billing
-    print("Step 4: Setting up subscription and billing...")
     billing_service = BillingService(store)
-    
+
     subscription_data = {
         'id': str(uuid4()),
         'institution_id': institution_id,
@@ -108,7 +90,7 @@ def test_complete_system_workflow():
         'teacher_count': 1
     }
     store.subscriptions[subscription_data['id']] = subscription_data
-    
+
     # Generate invoice
     invoice = billing_service.create_invoice(
         institution_id=institution_id,
@@ -118,13 +100,9 @@ def test_complete_system_workflow():
         student_count=1,
         teacher_count=1
     )
-    
-    if invoice and invoice.total_amount > 0:
-        print(f"[PASS] Invoice generated: {invoice.invoice_number}")
-    else:
-        print("[ERROR] Invoice generation failed")
-        return False
-    
+
+    assert invoice and invoice.total_amount > 0, "فشل إنشاء الفاتورة"
+
     # Record payment
     payment = billing_service.record_payment(
         invoice_id=invoice.id,
@@ -132,46 +110,29 @@ def test_complete_system_workflow():
         payment_method=PaymentMethod.CREDIT_CARD,
         transaction_id="txn_12345"
     )
-    
-    if payment:
-        print("[PASS] Payment recorded successfully")
-    else:
-        print("[ERROR] Payment recording failed")
-        return False
-    
+
+    assert payment, "فشل تسجيل الدفعة"
+
     # Phase 3: AI-Powered Learning Features
-    print("Step 5: Testing Phase 3 AI features...")
-    
+
     # Arabic NLP processing
     nlp_processor = get_arabic_nlp_processor()
     text_analysis = nlp_processor.process_text("explain python loops", ArabicDialect.MODERN_STANDARD)
-    
-    if text_analysis.detected_dialect:
-        print(f"[PASS] Arabic NLP processed: {text_analysis.complexity.value} complexity")
-    else:
-        print("[ERROR] Arabic NLP failed")
-        return False
-    
+
+    assert text_analysis.detected_dialect, "فشل معالجة النص العربي"
+
     # Voice input
     voice_processor = get_voice_processor()
     voice_transcription = voice_processor.transcribe_audio("audio_data_placeholder", VoiceLanguage.ENGLISH, student_user['id'])
-    
-    if voice_transcription.transcribed_text:
-        print("[PASS] Voice transcription working")
-    else:
-        print("[ERROR] Voice transcription failed")
-        return False
-    
+
+    assert voice_transcription.transcribed_text, "فشل تحويل الصوت لنص"
+
     # Image analysis
     image_analyzer = get_image_analyzer()
     image_analysis = image_analyzer.analyze_image("image_data_placeholder", ImageType.QUESTION_IMAGE, student_user['id'])
-    
-    if image_analysis.detected_content:
-        print(f"[PASS] Image analysis: {image_analysis.detected_content.value}")
-    else:
-        print("[ERROR] Image analysis failed")
-        return False
-    
+
+    assert image_analysis.detected_content, "فشل تحليل الصورة"
+
     # Enhanced memory
     memory = LearningMemory()
     memory_id = memory.remember(
@@ -181,13 +142,9 @@ def test_complete_system_workflow():
         importance="high",
         tags=["python", "loops", "help"]
     )
-    
-    if memory_id:
-        print("[PASS] Enhanced memory working")
-    else:
-        print("[ERROR] Memory system failed")
-        return False
-    
+
+    assert memory_id, "فشل نظام الذاكرة"
+
     # Self-learning pipeline
     learning_pipeline = get_self_learning_pipeline(store)
     learning_signal = LearningSignal(
@@ -201,53 +158,28 @@ def test_complete_system_workflow():
         timestamp=datetime.now(timezone.utc)
     )
     signal_id = learning_pipeline.record_signal(learning_signal)
-    
-    if signal_id:
-        print("[PASS] Self-learning pipeline working")
-    else:
-        print("[ERROR] Self-learning pipeline failed")
-        return False
-    
+
+    assert signal_id, "فشل خط التعلم الذاتي"
+
     # Cross-phase integration test
-    print("Step 6: Testing cross-phase integration...")
-    
+
     # Verify institution data is accessible across services
     institution_data = store.institutions.get(institution_id)
-    if institution_data:
-        print("[PASS] Institution data accessible")
-    else:
-        print("[ERROR] Institution data not accessible")
-        return False
-    
+    assert institution_data, "بيانات المؤسسة غير متاحة"
+
     # Verify billing is linked to institution
-    if invoice.institution_id == institution_id:
-        print("[PASS] Billing linked to institution")
-    else:
-        print("[ERROR] Billing not linked to institution")
-        return False
-    
+    assert invoice.institution_id == institution_id, "الفوترة غير مرتبطة بالمؤسسة"
+
     # Verify AI features have user context
     recalled_memory = memory.recall(student_user['id'], limit=5)
-    if len(recalled_memory) > 0:
-        print("[PASS] AI memory has user context")
-    else:
-        print("[ERROR] AI memory missing user context")
-        return False
-    
+    assert len(recalled_memory) > 0, "ذاكرة الذكاء تفتقد سياق المستخدم"
+
     # Verify learning signals are tied to users
     learning_metrics = learning_pipeline.get_learning_metrics()
-    if learning_metrics['total_signals'] > 0:
-        print("[PASS] Learning signals tied to users")
-    else:
-        print("[ERROR] Learning signals not tracked")
-        return False
-    
-    return True
+    assert learning_metrics['total_signals'] > 0, "إشارات التعلم غير مسجلة"
 
 def test_data_consistency():
     """Test data consistency across all phases"""
-    print("\n--- Testing Data Consistency ---")
-    
     # Create test institution
     institution_id = str(uuid4())
     institution_data = {
@@ -257,7 +189,7 @@ def test_data_consistency():
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     store.institutions[institution_id] = institution_data
-    
+
     # Create subscription
     subscription_id = str(uuid4())
     subscription_data = {
@@ -267,7 +199,7 @@ def test_data_consistency():
         'status': 'active'
     }
     store.subscriptions[subscription_id] = subscription_data
-    
+
     # Create users
     student_id = str(uuid4())
     student_data = {
@@ -277,26 +209,14 @@ def test_data_consistency():
         'institution_id': institution_id
     }
     store.users[student_id] = student_data
-    
+
     # Verify relationships
-    if store.institutions[institution_id]['id'] == institution_id:
-        print("[PASS] Institution stored correctly")
-    else:
-        print("[ERROR] Institution storage failed")
-        return False
-    
-    if store.subscriptions[subscription_id]['institution_id'] == institution_id:
-        print("[PASS] Subscription linked to institution")
-    else:
-        print("[ERROR] Subscription linkage failed")
-        return False
-    
-    if store.users[student_id]['institution_id'] == institution_id:
-        print("[PASS] User linked to institution")
-    else:
-        print("[ERROR] User linkage failed")
-        return False
-    
+    assert store.institutions[institution_id]['id'] == institution_id, "فشل تخزين المؤسسة"
+
+    assert store.subscriptions[subscription_id]['institution_id'] == institution_id, "فشل ربط الاشتراك بالمؤسسة"
+
+    assert store.users[student_id]['institution_id'] == institution_id, "فشل ربط المستخدم بالمؤسسة"
+
     # Test Phase 3 data consistency
     learning_pipeline = get_self_learning_pipeline(store)
     signal = LearningSignal(
@@ -310,19 +230,11 @@ def test_data_consistency():
         timestamp=datetime.now(timezone.utc)
     )
     signal_id = learning_pipeline.record_signal(signal)
-    
-    if signal_id in store.learning_signals:
-        print("[PASS] Learning signal stored in correct collection")
-    else:
-        print("[ERROR] Learning signal storage failed")
-        return False
-    
-    return True
+
+    assert signal_id in store.learning_signals, "فشل تخزين إشارة التعلم"
 
 def test_service_integration():
     """Test integration between different services"""
-    print("\n--- Testing Service Integration ---")
-    
     # Test that store has all required collections
     required_collections = [
         # Phase 1
@@ -333,46 +245,27 @@ def test_service_integration():
         'learning_signals', 'learning_patterns', 'model_updates', 'learning_metrics',
         'voice_interactions', 'voice_sessions', 'image_analyses'
     ]
-    
-    all_present = True
+
     for collection in required_collections:
-        if hasattr(store, collection):
-            print(f"[PASS] Store has {collection}")
-        else:
-            print(f"[ERROR] Store missing {collection}")
-            all_present = False
-    
-    if not all_present:
-        return False
-    
-    # Test service initialization
-    try:
-        billing_service = BillingService(store)
-        learning_pipeline = get_self_learning_pipeline(store)
-        nlp_processor = get_arabic_nlp_processor()
-        voice_processor = get_voice_processor()
-        image_analyzer = get_image_analyzer()
-        memory = LearningMemory()
-        
-        print("[PASS] All services initialized successfully")
-    except Exception as e:
-        print(f"[ERROR] Service initialization failed: {e}")
-        return False
-    
-    return True
+        assert hasattr(store, collection), f"المخزن يفتقد المجموعة: {collection}"
+
+    # Test service initialization (any exception fails the test)
+    billing_service = BillingService(store)
+    learning_pipeline = get_self_learning_pipeline(store)
+    nlp_processor = get_arabic_nlp_processor()
+    voice_processor = get_voice_processor()
+    image_analyzer = get_image_analyzer()
+    memory = LearningMemory()
+    assert billing_service is not None and learning_pipeline is not None, "فشل تهيئة الخدمات"
+    assert nlp_processor is not None and voice_processor is not None, "فشل تهيئة خدمات الذكاء"
+    assert image_analyzer is not None and memory is not None, "فشل تهيئة الذاكرة وتحليل الصور"
 
 def test_backward_compatibility():
     """Test backward compatibility with existing functionality"""
-    print("\n--- Testing Backward Compatibility ---")
-    
     # Test Phase 1 backward compatibility
     student_code = generate_student_code("test_inst", "class_1", "grade_10", "2024", "admin")
-    if student_code['code']:
-        print("[PASS] Phase 1 code generation still works")
-    else:
-        print("[ERROR] Phase 1 backward compatibility failed")
-        return False
-    
+    assert student_code['code'], "توافق المرحلة 1 مكسور"
+
     # Test Phase 2 backward compatibility
     billing_service = BillingService(store)
     invoice = billing_service.create_invoice(
@@ -383,59 +276,56 @@ def test_backward_compatibility():
         student_count=10,
         teacher_count=2
     )
-    if invoice:
-        print("[PASS] Phase 2 billing still works")
-    else:
-        print("[ERROR] Phase 2 backward compatibility failed")
-        return False
-    
+    assert invoice, "توافق الفوترة مكسور"
+
     # Test memory backward compatibility
     memory = LearningMemory()
     legacy_recall = memory.recall_legacy("user_1", "conversation")
-    print("[PASS] Memory backward compatibility maintained")
-    
-    return True
+    assert isinstance(legacy_recall, list), "توافق الذاكرة القديمة مكسور"
 
 def main():
     print("=" * 80)
     print("FINAL COMPREHENSIVE INTEGRATION TEST - Allamni v4.0")
     print("Testing all three phases together")
     print("=" * 80)
-    
+
     # Reset store for clean test
     store.reset()
-    
+
     tests = [
         ("Complete System Workflow", test_complete_system_workflow),
         ("Data Consistency", test_data_consistency),
         ("Service Integration", test_service_integration),
         ("Backward Compatibility", test_backward_compatibility)
     ]
-    
+
     results = []
     for test_name, test_func in tests:
         try:
-            result = test_func()
-            results.append((test_name, result))
+            test_func()
+            results.append((test_name, True))
+        except AssertionError as e:
+            print(f"[FAIL] {test_name}: {e}")
+            results.append((test_name, False))
         except Exception as e:
             print(f"[ERROR] {test_name} failed with exception: {e}")
             results.append((test_name, False))
-    
+
     print("\n" + "=" * 80)
     print("FINAL INTEGRATION TEST RESULTS")
     print("=" * 80)
-    
+
     passed = sum(1 for _, result in results if result)
     total = len(results)
-    
+
     for test_name, result in results:
         status = "[PASS]" if result else "[FAIL]"
         print(f"{status} {test_name}")
-    
+
     print("=" * 80)
     print(f"TOTAL: {passed}/{total} tests passed")
     print("=" * 80)
-    
+
     if passed == total:
         print("\n[SUCCESS] ALL FINAL INTEGRATION TESTS PASSED!")
         print("\nFinal System Status:")

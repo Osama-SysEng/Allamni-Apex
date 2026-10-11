@@ -173,8 +173,9 @@ async def voice_transcribe(body:VoiceTranscribeRequest,authorization:str=Header(
     c=await auth(authorization)
     if c["sub"]!=body.student_id and c["role"] not in {"admin","institution_manager","teacher"}: raise HTTPException(403,"forbidden")
     
-    # TODO: Integrate with speech-to-text service (Google Speech-to-Text, etc.)
-    # For now, return a placeholder response
+    # NOTE (documented scope): STT provider integration (e.g. Google Speech-to-Text)
+    # requires a user-supplied API key; until then this endpoint returns an
+    # explicit placeholder (status="placeholder", never presented as real).
     
     return {
         "transcribed_text": "النص المقترح من الصوت (خاصية قيد التطوير)",
