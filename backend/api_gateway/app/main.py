@@ -6,9 +6,11 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 app = FastAPI(title="Allamni API Gateway", version="1.0.0")
+_cors_regex = os.getenv("CORS_ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.app")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv("CORS_ALLOWED_ORIGINS","http://localhost:8080").split(","),
+    allow_origin_regex=_cors_regex,
     allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
 )
 
