@@ -74,3 +74,4 @@ Real LLM, Odoo, production database repositories, object storage and deployment 
 - Live PostgreSQL (15 tables) + `.env.example`
 - 55 tests collected, 0 collection errors
 - Interactive 3D showcase: open `web-3d/index.html` (Three.js, animated, mouse-reactive)
+- Structured JSON logging + X-Request-ID tracing (see docs/LOGGING.md)
