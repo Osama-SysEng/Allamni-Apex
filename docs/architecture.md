@@ -1,7 +1,7 @@
 # Allamni Architecture v3
 
 ```text
-Flutter / Web / Telegram
+Flutter / Web
         |
    API Gateway
         |
