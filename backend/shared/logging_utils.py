@@ -12,7 +12,7 @@ import os
 import sys
 import uuid
 from contextvars import ContextVar
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 SERVICE = os.getenv("SERVICE_NAME", "allamni-api")
 ENV = os.getenv("ENVIRONMENT", "development")
@@ -38,7 +38,7 @@ def _redact(obj):
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload = {
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+            "timestamp": datetime.now(UTC).isoformat(timespec="milliseconds"),
             "level": record.levelname.lower(),
             "service": SERVICE,
             "env": ENV,
