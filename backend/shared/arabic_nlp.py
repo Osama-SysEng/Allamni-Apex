@@ -9,6 +9,9 @@ import re
 from datetime import datetime, timezone
 import json
 import os
+from .logging_utils import get_logger
+
+_logger = get_logger("allamni-shared")
 
 class ArabicDialect(str, Enum):
     """Arabic dialects supported by the system"""
@@ -339,7 +342,7 @@ Return JSON with these exact keys:
         return result
     except Exception as e:
         # Fallback to rule-based processing if AI fails
-        print(f"AI dialect detection failed: {e}. Using rule-based fallback.")
+        _logger.warning(f"AI dialect detection failed: {e}. Using rule-based fallback.")
         processor = get_arabic_nlp_processor()
         analysis = processor.process_text(text, dialect)
         return {

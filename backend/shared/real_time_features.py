@@ -9,6 +9,9 @@ from typing import Dict, List, Optional, Any, Callable
 from enum import Enum
 import json
 from collections import defaultdict
+from .logging_utils import get_logger
+
+_logger = get_logger("allamni-shared")
 
 class EventType(str, Enum):
     """Real-time event types"""
@@ -117,7 +120,7 @@ class WebSocketConnection:
         
         for connection_id in connections:
             # In production, this would send actual WebSocket message
-            print(f"WebSocket: Broadcasting to {connection_id} for user {user_id}: {event.event_type.value}")
+            _logger.debug(f"WebSocket: Broadcasting to {connection_id} for user {user_id}: {event.event_type.value}")
     
     def broadcast_to_multiple_users(self, user_ids: List[str], event: RealTimeEvent):
         """Broadcast event to multiple users"""
@@ -134,7 +137,7 @@ class WebSocketConnection:
             try:
                 handler(event)
             except Exception as e:
-                print(f"Error in event handler: {e}")
+                _logger.exception(f"Error in event handler: {e}")
 
 class RealTimeService:
     """Real-time service for live updates and notifications"""

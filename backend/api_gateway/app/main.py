@@ -4,6 +4,9 @@ from fastapi.responses import Response, JSONResponse
 import httpx, os, time
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from shared.logging_utils import get_logger, new_request_id, request_id_ctx
+
+logger = get_logger("gateway")
 
 app = FastAPI(title="Allamni API Gateway", version="1.0.0")
 _cors_regex = os.getenv("CORS_ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.app")
@@ -17,6 +20,31 @@ app.add_middleware(
 RATE_LIMIT = int(os.getenv("GATEWAY_RATE_LIMIT", "300"))
 RATE_WINDOW = 60.0
 _BUCKETS: dict[str, list] = {}
+
+
+@app.middleware("http")
+async def access_log_middleware(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or new_request_id()
+    request_id_ctx.set(request_id)
+    start = time.monotonic()
+    try:
+        response = await call_next(request)
+        duration_ms = (time.monotonic() - start) * 1000
+        response.headers["X-Request-ID"] = request_id
+        logger.info(
+            f"access: {request.method} {request.url.path} -> {response.status_code} in {duration_ms:.1f}ms",
+            extra={"fields": {"http.method": request.method, "http.path": request.url.path,
+                              "http.status": response.status_code, "duration_ms": round(duration_ms, 1)}},
+        )
+        return response
+    except Exception:
+        duration_ms = (time.monotonic() - start) * 1000
+        logger.exception(
+            f"access: {request.method} {request.url.path} failed in {duration_ms:.1f}ms",
+            extra={"fields": {"http.method": request.method, "http.path": request.url.path,
+                              "duration_ms": round(duration_ms, 1)}},
+        )
+        raise
 
 
 @app.middleware("http")

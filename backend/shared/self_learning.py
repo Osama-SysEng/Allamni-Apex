@@ -10,6 +10,9 @@ from enum import Enum
 import json
 import hashlib
 from collections import Counter
+from .logging_utils import get_logger
+
+_logger = get_logger("allamni-shared")
 
 class LearningSignalType(str, Enum):
     """Types of learning signals from user interactions"""
@@ -295,7 +298,7 @@ class SelfLearningPipeline:
         self.store.learning_metrics['models_deployed'] += 1
         
         # Log deployment
-        print(f"Deployed model update {update.id} with confidence {update.confidence}")
+        _logger.info(f"Deployed model update {update.id} with confidence {update.confidence}")
     
     def get_learning_metrics(self) -> Dict[str, Any]:
         """Get current learning metrics"""

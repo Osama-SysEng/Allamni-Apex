@@ -11,6 +11,7 @@ from shared.intelligence import AgentOrchestrator, cognitive_snapshot, risk_scor
 from shared.content import lesson_blueprint
 from shared.ai_providers import get_ai_provider, AIProviderType, AIMessage, MessageRole
 from shared.config.settings import settings
+from shared.logging_utils import get_logger
 from shared.arabic_nlp import get_arabic_nlp_processor, ArabicDialect
 from shared.voice_input import get_voice_processor, VoiceLanguage
 from shared.image_analysis import get_image_analyzer, ImageType
@@ -19,6 +20,7 @@ from shared.powerful_ai_chatbot import get_powerful_ai_chatbot, ConversationCont
 from shared.real_time_features import get_real_time_service, NotificationPriority
 
 app=FastAPI(title="Allamni AI Service", version="4.0.0")
+logger = get_logger("ai-service")
 orchestrator=AgentOrchestrator()
 
 # Initialize AI provider based on configuration
@@ -30,7 +32,7 @@ try:
         model=os.getenv("GEMINI_MODEL", "gemini-1.5-pro")
     )
 except Exception as e:
-    print(f"Error: Could not initialize AI provider: {e}")
+    logger.error(f"Error: Could not initialize AI provider: {e}")
     ai_provider = None
 
 @app.on_event("startup")
@@ -46,8 +48,8 @@ async def startup_validation():
             "Get it from: https://aistudio.google.com/app/apikey"
         )
     
-    print(f"AI Service started with provider: {provider_type}")
-    print(f"Model: {os.getenv('GEMINI_MODEL', 'gemini-1.5-pro')}")
+    logger.info(f"AI Service started with provider: {provider_type}")
+    logger.info(f"Model: {os.getenv('GEMINI_MODEL', 'gemini-1.5-pro')}")
 
 class AnalyzeRequest(BaseModel): student_id:str
 class GenerateRequest(BaseModel): student_id:str; prompt:str="Create adaptive learning material"; context:dict={}

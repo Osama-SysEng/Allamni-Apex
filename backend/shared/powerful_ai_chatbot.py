@@ -10,6 +10,9 @@ from enum import Enum
 import json
 import hashlib
 import asyncio
+from .logging_utils import get_logger
+
+_logger = get_logger("allamni-shared")
 
 class ConversationContext(str, Enum):
     """Conversation context types"""
@@ -365,7 +368,7 @@ class PowerfulAIChatbot:
             confidence = 0.9  # High confidence for real AI
         except Exception as e:
             # Rule-based fallback when the live provider is unreachable/misconfigured.
-            print(f"AI provider error: {e}. Using fallback response.")
+            _logger.warning(f"AI provider error: {e}. Using fallback response.")
             response_content = self._generate_mock_response(thread, user_message, full_context)
             confidence = 0.7
         

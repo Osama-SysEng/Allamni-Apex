@@ -4,6 +4,9 @@ This file now uses the new centralized AI provider system
 """
 import os
 from shared.ai_providers import get_ai_provider, AIProviderType
+from shared.logging_utils import get_logger
+
+_logger = get_logger("ai-service")
 
 def get_provider(name=None):
     """Get AI provider instance (legacy compatibility)"""
@@ -21,5 +24,5 @@ def get_provider(name=None):
             raise RuntimeError(f"AI provider failed in production: {e}")
         # Only fall back to mock in test/development
         from shared.ai_providers import MockAIProvider
-        print(f"⚠️ Development mode: using mock AI provider. Error: {e}")
+        _logger.warning(f"Development mode: using mock AI provider. Error: {e}")
         return MockAIProvider()
